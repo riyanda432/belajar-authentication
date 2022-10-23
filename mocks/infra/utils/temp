@@ -1,0 +1,607 @@
+package mock_utils
+
+import (
+	"context"
+
+	utils_mongo "github.com/riyanda432/belajar-authentication/src/infra/utils/mongo"
+	infra_model "github.com/riyanda432/belajar-authentication/src/infra/models"
+	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+type MockMongoClient struct {
+	mock.Mock
+}
+
+func (m *MockMongoClient) MockConnect(err error) {
+	m.Mock.On("Connect", mock.Anything).Return(err)
+}
+
+// Connect implements infra_mongo.IMongoClient
+func (m *MockMongoClient) Connect(ctx context.Context) error {
+	args := m.Called(ctx)
+	var err error
+
+	if n, ok := args.Get(0).(error); ok {
+		err = n
+	}
+	return err
+}
+
+func (m *MockMongoClient) MockDatabase(res utils_mongo.IMongoDatabase) {
+	m.Mock.On("Database", mock.Anything, mock.Anything).Return(res)
+}
+
+// Database implements infra_mongo.IMongoClient
+func (m *MockMongoClient) Database(name string, opts ...*options.DatabaseOptions) utils_mongo.IMongoDatabase {
+	args := m.Called(name, opts)
+	var res utils_mongo.IMongoDatabase
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoDatabase); ok {
+		res = n
+	}
+	return res
+}
+
+var _ utils_mongo.IMongoClient = &MockMongoClient{}
+
+type MockMongoDatabase struct {
+	mock.Mock
+}
+
+func (m *MockMongoDatabase) MockCollection(res utils_mongo.IMongoCollection) {
+	m.Mock.On("Collection", mock.Anything, mock.Anything).Return(res)
+}
+
+// Collection implements infra_mongo.IMongoDatabase
+func (m *MockMongoDatabase) Collection(name string, opts ...*options.CollectionOptions) utils_mongo.IMongoCollection {
+	args := m.Called(name, opts)
+	var res utils_mongo.IMongoCollection
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoCollection); ok {
+		res = n
+	}
+	return res
+}
+
+var _ utils_mongo.IMongoDatabase = &MockMongoDatabase{}
+var _ utils_mongo.IIndexView = &MockIndexView{}
+
+type MockIndexView struct {
+	mock.Mock
+}
+
+func NewMockIndexView() *MockIndexView {
+	return &MockIndexView{}
+}
+
+func (m MockIndexView) List(ctx context.Context, opts ...*options.ListIndexesOptions) (*mongo.Cursor, error) {
+	args := m.Called(ctx, opts)
+
+	var err error
+	var res *mongo.Cursor
+	if n, ok := args.Get(0).(*mongo.Cursor); ok {
+		res = n
+	}
+
+	if e, ok := args.Get(1).(error); ok {
+		err = e
+	}
+
+	return res, err
+}
+
+func (m MockIndexView) DropOne(ctx context.Context, name string, opts ...*options.DropIndexesOptions) (bson.Raw, error) {
+	args := m.Called(ctx, name, opts)
+
+	var err error
+	var res bson.Raw
+
+	if n, ok := args.Get(0).(bson.Raw); ok {
+		res = n
+	}
+
+	if e, ok := args.Get(1).(error); ok {
+		err = e
+	}
+
+	return res, err
+}
+
+func (m MockIndexView) DropAll(ctx context.Context, opts ...*options.DropIndexesOptions) (bson.Raw, error) {
+	args := m.Called(ctx, opts)
+
+	var err error
+	var res bson.Raw
+
+	if n, ok := args.Get(0).(bson.Raw); ok {
+		res = n
+	}
+
+	if e, ok := args.Get(1).(error); ok {
+		err = e
+	}
+
+	return res, err
+}
+
+func (m MockIndexView) ListSpecifications(ctx context.Context, opts ...*options.ListIndexesOptions) ([]*mongo.IndexSpecification, error) {
+	args := m.Called(ctx, opts)
+
+	var err error
+	var res []*mongo.IndexSpecification
+	if n, ok := args.Get(0).([]*mongo.IndexSpecification); ok {
+		res = n
+	}
+
+	if e, ok := args.Get(1).(error); ok {
+		err = e
+	}
+
+	return res, err
+}
+
+func (m MockIndexView) CreateOne(ctx context.Context, model mongo.IndexModel, opts ...*options.CreateIndexesOptions) (string, error) {
+	args := m.Called(ctx, opts)
+
+	var err error
+	var res string
+	if n, ok := args.Get(0).(string); ok {
+		res = n
+	}
+
+	if e, ok := args.Get(1).(error); ok {
+		err = e
+	}
+
+	return res, err
+}
+
+func (m MockIndexView) CreateMany(ctx context.Context, models []mongo.IndexModel, opts ...*options.CreateIndexesOptions) ([]string, error) {
+	args := m.Called(ctx, opts)
+
+	var err error
+	var res []string
+	if n, ok := args.Get(0).([]string); ok {
+		res = n
+	}
+
+	if e, ok := args.Get(1).(error); ok {
+		err = e
+	}
+
+	return res, err
+}
+
+type MockMongoCollection struct {
+	mock.Mock
+}
+
+func (m *MockMongoCollection) MockAggregate(res utils_mongo.IMongoCursor, err error) {
+	m.Mock.On("Aggregate", mock.Anything, mock.Anything, mock.Anything).
+		Once().
+		Return(res, err)
+}
+
+// Aggregate implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) Aggregate(
+	ctx context.Context,
+	pipeline interface{},
+	opts ...*options.AggregateOptions,
+) (utils_mongo.IMongoCursor, error) {
+	args := m.Called(ctx, pipeline, opts)
+
+	var res utils_mongo.IMongoCursor
+	var err error
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoCursor); ok {
+		res = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return res, err
+}
+
+func (m *MockMongoCollection) MockUpdateOne(res *mongo.UpdateResult, err error) {
+	m.Mock.On("UpdateOne", mock.Anything, mock.Anything, mock.Anything).Return(res, err)
+}
+
+// UpdateOne implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) UpdateOne(
+	ctx context.Context,
+	filter interface{},
+	update interface{},
+	opts ...*options.UpdateOptions,
+) (*mongo.UpdateResult, error) {
+	args := m.Called(ctx, filter, opts)
+
+	var res *mongo.UpdateResult
+	var err error
+
+	if n, ok := args.Get(0).(*mongo.UpdateResult); ok {
+		res = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return res, err
+}
+
+// UpdateMany implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) UpdateMany(
+	ctx context.Context,
+	filter interface{},
+	update interface{},
+	opts ...*options.UpdateOptions,
+) (*mongo.UpdateResult, error) {
+	args := m.Called(ctx, filter, opts)
+
+	var res *mongo.UpdateResult
+	var err error
+
+	if n, ok := args.Get(0).(*mongo.UpdateResult); ok {
+		res = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return res, err
+}
+
+func (m *MockMongoCollection) MockCountDocuments(count int64, err error) {
+	m.Mock.On("CountDocuments", mock.Anything, mock.Anything, mock.Anything).
+		Return(count, err)
+}
+
+// CountDocuments implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) CountDocuments(
+	ctx context.Context,
+	filter interface{},
+	opts ...*options.CountOptions,
+) (int64, error) {
+	args := m.Called(ctx, filter, opts)
+	var count int64
+	var err error
+
+	if n, ok := args.Get(0).(int64); ok {
+		count = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return count, err
+}
+
+func (m *MockMongoCollection) MockFind(res utils_mongo.IMongoCursor, err error) {
+	m.Mock.On("Find", mock.Anything, mock.Anything, mock.Anything).Return(res, err)
+}
+
+// Find implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) Find(
+	ctx context.Context,
+	filter interface{},
+	opts ...*options.FindOptions,
+) (utils_mongo.IMongoCursor, error) {
+	args := m.Called(ctx, filter, opts)
+
+	var res utils_mongo.IMongoCursor
+	var err error
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoCursor); ok {
+		res = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return res, err
+}
+
+func (m *MockMongoCollection) MockFindOne(res utils_mongo.IMongoSingleResult) {
+	m.Mock.On("FindOne", mock.Anything, mock.Anything, mock.Anything).Return(res)
+}
+
+// FindOne implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) FindOne(
+	ctx context.Context,
+	filter interface{},
+	opts ...*options.FindOneOptions,
+) utils_mongo.IMongoSingleResult {
+	args := m.Called(ctx, filter, opts)
+	var res utils_mongo.IMongoSingleResult
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoSingleResult); ok {
+		res = n
+	}
+	return res
+}
+
+func (m *MockMongoCollection) MockFindOneAndDelete(res utils_mongo.IMongoSingleResult) {
+	m.Mock.On("FindOneAndDelete", mock.Anything, mock.Anything, mock.Anything).
+		Return(res)
+}
+
+// FindOneAndDelete implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) FindOneAndDelete(
+	ctx context.Context,
+	filter interface{},
+	opts ...*options.FindOneAndDeleteOptions,
+) utils_mongo.IMongoSingleResult {
+	args := m.Called(ctx, filter, opts)
+	var res utils_mongo.IMongoSingleResult
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoSingleResult); ok {
+		res = n
+	}
+
+	return res
+}
+
+func (m *MockMongoCollection) MockFindOneAndReplace(res utils_mongo.IMongoSingleResult) {
+	m.Mock.On(
+		"FindOneAndReplace",
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.Anything,
+	).Return(res)
+}
+
+// FindOneAndReplace implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) FindOneAndReplace(
+	ctx context.Context,
+	filter interface{},
+	replacement interface{},
+	opts ...*options.FindOneAndReplaceOptions,
+) utils_mongo.IMongoSingleResult {
+	args := m.Called(ctx, filter, replacement, opts)
+	var res utils_mongo.IMongoSingleResult
+
+	if n, ok := args.Get(0).(utils_mongo.IMongoSingleResult); ok {
+		res = n
+	}
+
+	return res
+}
+
+func (m *MockMongoCollection) MockInsertOne(res *mongo.InsertOneResult, err error) {
+	m.Mock.On("InsertOne", mock.Anything, mock.Anything, mock.Anything).
+		Return(res, err)
+}
+
+// InsertOne implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) InsertOne(
+	ctx context.Context,
+	document interface{},
+	opts ...*options.InsertOneOptions,
+) (*mongo.InsertOneResult, error) {
+	args := m.Called(ctx, document, opts)
+	var res *mongo.InsertOneResult
+	var err error
+
+	if n, ok := args.Get(0).(*mongo.InsertOneResult); ok {
+		res = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return res, err
+}
+
+func (m *MockMongoCollection) Indexes() utils_mongo.IIndexView {
+	args := m.Called()
+	var res utils_mongo.IIndexView
+	if n, ok := args.Get(0).(utils_mongo.IIndexView); ok {
+		res = n
+	}
+	return res
+}
+
+func (m *MockMongoCollection) MockDeleteMany(res mongo.DeleteResult) {
+	m.Mock.On("DeleteMany", mock.Anything, mock.Anything, mock.Anything).
+		Return(res)
+}
+
+// DeleteMany implements infra_mongo.IMongoCollection
+func (m *MockMongoCollection) DeleteMany(
+	ctx context.Context,
+	filter interface{},
+	opts ...*options.DeleteOptions,
+) (*mongo.DeleteResult, error) {
+	args := m.Called(ctx, filter, opts)
+	var res *mongo.DeleteResult
+	var err error
+
+	if n, ok := args.Get(0).(*mongo.DeleteResult); ok {
+		res = n
+	}
+
+	if n, ok := args.Get(1).(error); ok {
+		err = n
+	}
+
+	return res, err
+}
+
+var _ utils_mongo.IMongoCollection = &MockMongoCollection{}
+
+type MockMongoSingleResult struct {
+	mock.Mock
+}
+
+// func (m *MockMongoSingleResult) MockDecode(order *infra_model.OrderDocument, err error) {
+// 	m.Mock.On("Decode", mock.AnythingOfType("**infra_model.OrderDocument")).Return(err).
+// 		Run(func(args mock.Arguments) {
+// 			arg := args.Get(0).(**infra_model.OrderDocument)
+// 			if order != nil {
+// 				*arg = order
+// 			}
+// 		})
+// }
+
+// Decode implements infra_mongo.IMongoCursor
+
+
+func (m *MockMongoCursor) MockDecodeOrderDocument(order *infra_model.OrderDocument, err error) {
+	m.Mock.On("Decode", mock.Anything).Return(err).
+		Run(func(args mock.Arguments) {
+			arg := args.Get(0).(*infra_model.OrderDocument)
+			if order != nil {
+				*arg = *order
+			}
+		})
+}
+
+func (m *MockMongoCursor) MockDecodeProductDocument(product *infra_model.ProductDocument, err error) {
+	m.Mock.On("Decode", mock.Anything).Return(err).
+		Run(func(args mock.Arguments) {
+			arg := args.Get(0).(*infra_model.ProductDocument)
+			if product != nil {
+				*arg = *product
+			}
+		})
+}
+
+// Decode implements infra_mongo.IMongoSingleResult
+func (m *MockMongoSingleResult) Decode(v interface{}) error {
+	args := m.Called(v)
+	var err error
+	if rf, ok := args.Get(0).(func(interface{}) error); ok {
+		err = rf(v)
+	} else {
+		err = args.Error(0)
+	}
+
+	return err
+}
+
+func (m *MockMongoSingleResult) MockErr(err error) {
+	m.Mock.On("Err").Return(err)
+}
+
+// Err implements infra_mongo.IMongoSingleResult
+func (m *MockMongoSingleResult) Err() error {
+	args := m.Called()
+	var err error
+
+	if n, ok := args.Get(0).(error); ok {
+		err = n
+	}
+
+	return err
+}
+
+var _ utils_mongo.IMongoSingleResult = &MockMongoSingleResult{}
+
+type MockMongoCursor struct {
+	mock.Mock
+}
+
+func (m *MockMongoCursor) MockTryNext(res bool) {
+	m.Mock.On("TryNext", mock.Anything).Once().Return(res)
+}
+
+// TryNext implements infra_mongo.IMongoCursor
+func (m *MockMongoCursor) TryNext(ctx context.Context) bool {
+	args := m.Called(ctx)
+	var res bool
+
+	if n, ok := args.Get(0).(bool); ok {
+		res = n
+	}
+	return res
+}
+
+// Decode implements infra_mongo.IMongoCursor
+func (m *MockMongoCursor) Decode(val interface{}) error {
+	args := m.Called(val)
+	var err error
+
+	if n, ok := args.Get(0).(error); ok {
+		err = n
+	}
+	return err
+}
+
+func (m *MockMongoCursor) MockDecodeCountResult(
+	total int64,
+	err error,
+) {
+	m.Mock.On("Decode", mock.Anything).Once().Return(err).
+		Run(func(args mock.Arguments) {
+			arg := args.Get(0).(*struct {
+				Total int64 `bson:"total"`
+			})
+			*arg = struct {
+				Total int64 "bson:\"total\""
+			}{
+				Total: total,
+			}
+
+		})
+}
+
+
+// func (m *MockMongoCursor) MockDecodeOrderDocument(order *infra_model.OrderDocument, err error) {
+// 	m.Mock.On("Decode", mock.Anything).Return(err).
+// 		Run(func(args mock.Arguments) {
+// 			arg := args.Get(0).(*infra_model.OrderDocument)
+// 			if order != nil {
+// 				*arg = *order
+// 			}
+// 		})
+// }
+
+// func (m *MockMongoCursor) MockDecodeProductDocument(product *infra_model.ProductDocument, err error) {
+// 	m.Mock.On("Decode", mock.Anything).Return(err).
+// 		Run(func(args mock.Arguments) {
+// 			arg := args.Get(0).(*infra_model.ProductDocument)
+// 			if product != nil {
+// 				*arg = *product
+// 			}
+// 		})
+// }
+
+func (m *MockMongoCursor) MockNext(res bool) {
+	m.Mock.On("Next", mock.Anything).Once().Return(res)
+}
+
+// Next implements infra_mongo.IMongoCursor
+func (m *MockMongoCursor) Next(ctx context.Context) bool {
+	args := m.Called(ctx)
+
+	var res bool
+
+	if n, ok := args.Get(0).(bool); ok {
+		res = n
+	}
+
+	return res
+}
+
+var _ utils_mongo.IMongoCursor = &MockMongoCursor{}
+
+
+func (m *MockMongoSingleResult) MockDecode(order *infra_model.OrderDocument, err error) {
+	m.Mock.On("Decode", mock.AnythingOfType("**infra_model.OrderDocument")).Return(err).
+		Run(func(args mock.Arguments) {
+			arg := args.Get(0).(**infra_model.OrderDocument)
+			if order != nil {
+				*arg = order
+			}
+		})
+}

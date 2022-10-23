@@ -1,0 +1,3 @@
+hooks:
+  pre-commit:
+    - go run ./src/interface/cli/cli.go unit-test-validation-with-excluded-folder 60.0
